@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AP Planner — v3.1 (Credit‑aware)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+:root{--bg:#0b1220;--panel:#0f172a;--card:#111827;--muted:#94a3b8;--text:#e5e7eb;--acc:#60a5fa;--warn:#f59e0b}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0b1220;color:var(--text)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+.top{position:sticky;top:0;z-index:10;background:#0b1220cc;backdrop-filter:blur(6px);border-bottom:1px solid #1f2937}
+.top .wrap{display:flex;gap:10px;align-items:center;padding:10px 0}
+.brand{font-weight:700}.tag{border:1px solid #334155;border-radius:999px;padding:2px 8px;font-size:12px;color:#cbd5e1;margin-left:6px}
+button{background:var(--acc);color:#0b1220;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+button.ghost{background:transparent;border:1px solid #334155;color:#cbd5e1}
+button.pill{background:transparent;border:1px solid #334155;color:#cbd5e1;border-radius:999px}button.pill.active{background:#0b1326}
+.app{display:grid;grid-template-columns:1fr;gap:16px;padding:18px 0}
+@media(min-width:1100px){.app{grid-template-columns:1fr 360px}}
+.card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px}
+.side{position:sticky;top:62px;height:fit-content}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;margin-bottom:12px;font-weight:600;color:#cbd5e1}
+input,select{width:100%;margin-top:6px;background:#0b1326;border:1px solid #1f2937;border-radius:12px;color:#e5e7eb;padding:10px 12px}
+.muted{color:#94a3b8}.tiny{font-size:12px}.hidden{display:none}
+.aplist{display:grid;grid-template-columns:1fr;gap:10px}@media(min-width:800px){.aplist{grid-template-columns:1fr 1fr}}
+.ap{border:1px solid #1f2937;border-radius:12px;padding:10px}.ap .top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.ap .prefs{display:flex;gap:6px;margin-top:8px}
+.ap input[type='range']{width:240px;height:22px;-webkit-appearance:none;appearance:none;background:#0b1326;border-radius:999px;border:1px solid #1f2937}
+.ap input[type='range']::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--acc);border:2px solid #1e40af;cursor:pointer}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b1326;color:#cbd5e1;border:1px solid #1f2937;font-size:12px}
+.board{display:grid;gap:10px;grid-template-columns:1fr}@media(min-width:900px){.board{grid-template-columns:1fr 1fr 1fr}}
+.col{border:1px dashed #334155;border-radius:12px;padding:10px;min-height:220px}.col h3{margin:0 0 8px}
+.cardlet{border:1px solid #1f2937;border-radius:10px;padding:8px;margin:6px 0;background:#0b1326}
+.warnings{border:1px solid var(--warn);background:#1a1510;color:#f8d36b;border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px dashed #243045;padding:8px;text-align:left}
+#printNote{display:none}@media print{header,aside .card, .top, .plans .pill, #btnPDF{display:none !important} body{background:#fff;color:#111} .card{border:none} #printNote{display:block;margin-bottom:10px} .col{break-inside:avoid} .board{grid-template-columns:1fr 1fr}}
+hr{border-color:#1f2937;margin:10px 0}
+</style></head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">🎓 AP Planner <span class="tag">v3.1</span></div>
+    <div style="flex:1"></div>
+    <button id="btnShare" class="ghost">Share</button>
+    <button id="btnCSV" class="ghost">Export CSV</button>
+    <button id="btnJSON" class="ghost">Export JSON</button>
+    <button id="btnPDF" class="ghost">Export PDF</button>
+    <button id="btnReset" class="ghost">Reset</button>
+  </div>
+</header>
+
+<main class="wrap app">
+  <section class="card" id="steps">
+    <div class="step" data-step="1">
+      <h2>Welcome to the AP Optimization Website!</h2>
+      <p class="muted">Credit-aware planning with prerequisites, redundancy bans, workload caps, and reasons per course.</p>
+      <button id="start" class="primary">Get Started</button>
+    </div>
+
+    <div class="step hidden" data-step="2">
+      <h2>Your details</h2>
+      <div class="grid2">
+        <label>Current grade
+          <select id="grade"><option>9</option><option>10</option><option selected>11</option><option>12</option></select>
+        </label>
+        <label>Years to graduation
+          <select id="years"><option>1</option><option selected>2</option><option>3</option></select>
+        </label>
+      </div>
+      <label>Weekly workload target (hrs/week)
+        <input id="hrs" type="number" min="10" max="50" value="28">
+      </label>
+      <label>University (type any)
+        <input id="univ" list="univList" placeholder="e.g., NUS (Business Analytics), UC Berkeley (Engineering)" />
+        <datalist id="univList">
+          <option value="NUS (Business Analytics)"></option>
+          <option value="UC Berkeley (Engineering)"></option>
+          <option value="KAIST (Engineering)"></option>
+          <option value="Georgia Tech (IE/CS)"></option>
+          <option value="Cornell (ORIE/CS)"></option>
+        </datalist>
+      </label>
+      <label>Intended major
+        <select id="major">
+          <option>Engineering (Mech/EE/CS)</option>
+          <option>Computer Science</option>
+          <option>Data/Business Analytics</option>
+          <option>Business/Economics</option>
+          <option>Bio/Health</option>
+          <option>Humanities/Social Sciences</option>
+          <option>Art/Design</option>
+          <option selected>Not sure</option>
+        </select>
+      </label>
+      <h3>APs taken (with scores) + preferences</h3>
+      <div id="aplist" class="aplist"></div>
+      <div class="row"><button class="ghost" data-nav="back">Back</button><button id="go" class="primary">Build Plans</button></div>
+    </div>
+
+    <div class="step hidden" data-step="3">
+      <h2>Your plan</h2>
+      <div id="printNote" class="tiny muted">Print view ready. Use “Save as PDF”.</div>
+      <div id="warnings" class="warnings hidden"></div>
+      <div class="row plans" style="gap:8px">
+        <button class="pill" data-mode="balanced">Balanced</button>
+        <button class="pill" data-mode="rigor">High Rigor</button>
+        <button class="pill" data-mode="credit">Max College Credit</button>
+        <button class="pill" data-mode="creditfirst">Credit‑First</button>
+        <span class="tiny muted">Filters:</span>
+        <label class="tiny"><input type="checkbox" id="fHideNoCredit"> Hide no‑credit APs</label>
+        <button id="btnCompare" class="ghost">Compare Modes</button>
+      </div>
+      <div id="board" class="board" style="margin-top:8px"></div>
+      <div id="compare" class="hidden"></div>
+      <div class="row"><button class="ghost" data-nav="back">Back</button><button id="restart" class="ghost">Restart</button></div>
+    </div>
+  </section>
+
+  <aside class="card side">
+    <h3>Priority (Top 12)</h3>
+    <div id="priority"></div>
+    <hr />
+    <h3>Policy: <span id="polUni">—</span></h3>
+    <div id="policyBox" class="tiny"></div>
+    <hr />
+    <h3>Study time</h3>
+    <div id="time" class="tiny"></div>
+  </aside>
+</main>
+
+<script>
+const CATALOG=["Precalculus","Calculus AB","Calculus BC","Physics 1","Physics 2","Physics C Mechanics","Physics C E&M","Chemistry","Biology","Environmental Science","Computer Science Principles","Computer Science A","Statistics","Economics (Micro)","Economics (Macro)","English Language","English Literature","World History","US History","Government & Politics","Psychology","Art & Design"];
+const LOAD={"Precalculus":4,"Calculus AB":6,"Calculus BC":7,"Physics 1":6,"Physics 2":6,"Physics C Mechanics":8,"Physics C E&M":8,"Chemistry":7,"Biology":6,"Environmental Science":4,"Computer Science Principles":4,"Computer Science A":6,"Statistics":5,"Economics (Micro)":4,"Economics (Macro)":4,"English Language":5,"English Literature":5,"World History":5,"US History":5,"Government & Politics":4,"Psychology":3,"Art & Design":6};
+const CATS={math:["Precalculus","Calculus AB","Calculus BC","Statistics"],physics:["Physics 1","Physics 2","Physics C Mechanics","Physics C E&M"],lab:["Physics 1","Physics 2","Physics C Mechanics","Physics C E&M","Chemistry","Biology","Environmental Science"],writing:["English Language","English Literature","World History","US History","Government & Politics"]};
+const PREREQS={"Calculus BC":["Precalculus","Calculus AB"],"Physics C Mechanics":["Calculus AB","Calculus BC"],"Physics C E&M":["Calculus AB","Calculus BC"],"Computer Science A":["Computer Science Principles"]};
+const MAJOR_W={"Engineering (Mech/EE/CS)":{"Calculus BC":10,"Calculus AB":8,"Physics C Mechanics":10,"Physics C E&M":9,"Physics 1":6,"Chemistry":7,"Computer Science A":6,"Statistics":5,"English Language":4},"Computer Science":{"Calculus BC":10,"Calculus AB":8,"Computer Science A":9,"Computer Science Principles":6,"Statistics":7,"Physics C Mechanics":7,"Physics 1":5,"English Language":5},"Data/Business Analytics":{"Calculus BC":9,"Calculus AB":7,"Statistics":10,"Computer Science A":7,"Computer Science Principles":5,"Economics (Micro)":7,"Economics (Macro)":6,"English Language":6},"Business/Economics":{"Statistics":9,"Economics (Micro)":9,"Economics (Macro)":9,"English Language":7,"Calculus AB":6,"Calculus BC":5},"Bio/Health":{"Biology":10,"Chemistry":9,"Physics 1":6,"Calculus AB":7,"Calculus BC":6,"Statistics":6,"English Language":5},"Humanities/Social Sciences":{"English Language":9,"English Literature":7,"World History":7,"US History":6,"Government & Politics":6,"Psychology":5,"Statistics":4},"Art/Design":{"Art & Design":9,"English Language":6,"Computer Science Principles":5,"Statistics":4},"Not sure":{"English Language":6,"Statistics":6,"Calculus AB":5,"World History":5,"Biology":5}};
+const UNI_W={"nus (business analytics)":{"Statistics":2,"Calculus BC":1,"Computer Science A":1},"uc berkeley (engineering)":{"Calculus BC":2,"Physics C Mechanics":2,"Chemistry":1,"English Language":1},"kaist (engineering)":{"Physics C Mechanics":2,"Physics C E&M":2,"Calculus BC":1,"Chemistry":1},"georgia tech (ie/cs)":{"Calculus BC":1,"Computer Science A":1,"Physics C Mechanics":1},"cornell (orie/cs)":{"Calculus BC":2,"Statistics":1,"Computer Science A":1}};
+
+let POLICIES=[];
+async function loadPolicies(){ try{ const r=await fetch('./data/all_policies.json'); POLICIES=await r.json(); }catch(e){ POLICIES=[]; } }
+function creditInfo(univ, course){ const uni=(univ||'').toLowerCase().trim(); const row=POLICIES.find(r=> r.university.toLowerCase()===uni && r.exam===course); return row? {credits:Number(row.credits||0),min:row.min_score??null,notes:row.notes||''}:{credits:0,min:null,notes:''}; }
+
+const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
+const state={profile:{grade:11,years:2,university:'',major:'Not sure',hrs:28},taken:{},locked:new Set(),avoid:new Set(),mode:'balanced',scores:[],filters:{hideNoCredit:false}};
+
+function goto(n){ $$('.step').forEach(x=>x.classList.add('hidden')); $(`.step[data-step="${n}"]`).classList.remove('hidden'); }
+
+function buildChecklist(){
+  const box=$('#aplist'); box.innerHTML='';
+  CATALOG.forEach(name=>{
+    const d=document.createElement('div'); d.className='ap';
+    d.innerHTML=`<div class="top"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-name="${name}"/> ${name}</label><div class="score"><span class="tiny muted">1–5</span><input type="range" min="1" max="5" step="1" value="3" data-score="${name}" disabled><span class="badge" data-score-val="${name}">3</span></div></div><div class="prefs"><button class="ghost" data-lock="${name}">Lock</button><button class="ghost" data-avoid="${name}">Avoid</button></div>`;
+    const chk=d.querySelector('input[type=checkbox]'); const slider=d.querySelector('input[type=range]'); const val=d.querySelector(`[data-score-val="${name}"]`);
+    const btnL=d.querySelector('[data-lock]'); const btnA=d.querySelector('[data-avoid]');
+    chk.addEventListener('change',()=>{ slider.disabled=!chk.checked; if(!chk.checked){ delete state.taken[name]; } else { state.taken[name]=Number(slider.value); } });
+    slider.addEventListener('input',()=>{ let v=Math.max(1,Math.min(5,Number(slider.value))); slider.value=v; val.textContent=v; if(chk.checked){ state.taken[name]=v; } });
+    btnL.addEventListener('click',()=>{ btnL.classList.toggle('active'); if(btnL.classList.contains('active')){ state.locked.add(name); state.avoid.delete(name); btnA.classList.remove('active'); } else { state.locked.delete(name); } });
+    btnA.addEventListener('click',()=>{ btnA.classList.toggle('active'); if(btnA.classList.contains('active')){ state.avoid.add(name); state.locked.delete(name); btnL.classList.remove('active'); } else { state.avoid.delete(name); } });
+    box.appendChild(d);
+  });
+}
+
+function weightsBase(){
+  const w=Object.fromEntries(CATALOG.map(c=>[c,0]));
+  const mw=MAJOR_W[state.profile.major]||{}; Object.entries(mw).forEach(([k,v])=> w[k]+=v);
+  const key=(state.profile.university||'').trim().toLowerCase(); const ub=UNI_W[key]||{}; Object.entries(ub).forEach(([k,v])=> w[k]+=v);
+  state.locked.forEach(k=>{ if(w[k]!=null) w[k]+=3; });
+  state.avoid.forEach(k=>{ if(w[k]!=null) w[k]-=5; });
+  return w;
+}
+function strengthAdjust(w){
+  const add=(k,d)=>{ if(w[k]!=null) w[k]+=d; };
+  const high=c=>(state.taken[c]||3)>=4; const low=c=>(state.taken[c]||3)<=2;
+  if(high("Calculus BC")||high("Calculus AB")){add("Physics C Mechanics",1);add("Physics C E&M",1);add("Statistics",1);}
+  if(low("Calculus BC")||low("Calculus AB")){add("Physics C Mechanics",-1);add("Physics C E&M",-1);}
+  if(high("Computer Science A")||high("Computer Science Principles")){add("Computer Science A",1);add("Statistics",1);}
+  return w;
+}
+let SCORE=[];
+function computeScores(){
+  let w=weightsBase(); w=strengthAdjust(w);
+  Object.keys(state.taken).forEach(t=>{ if(w[t]!=null) w[t]-=1000; });
+  if(state.taken["Calculus BC"]) w["Calculus AB"]=-9999;
+  if(state.taken["Physics C Mechanics"]||state.taken["Physics C E&M"]) w["Physics 1"]=-9999;
+  SCORE=Object.entries(w).map(([course,score])=>({course,score}));
+}
+function creditBoost(course, mode){
+  const {credits}=creditInfo(state.profile.university, course);
+  const norm=Math.min(12, Number(credits)||0)/12;
+  const weight = (mode==='credit' || mode==='creditfirst') ? 1.6 : 0.8;
+  return norm*weight;
+}
+function capsFor(mode, hrs){ const b={ap:5,lab:2,math:2,hours:hrs}; if(mode==='rigor'){b.ap=Math.min(7,b.ap+1);b.hours+=4;} if(mode==='credit'){b.lab=Math.min(3,b.lab+1);} return b; }
+function rationale(course, gradeNum){
+  const bits=[];
+  const mw=MAJOR_W[state.profile.major]||{}; if((mw[course]||0)>=8) bits.push(`Strong fit for ${state.profile.major}`);
+  const key=(state.profile.university||'').trim().toLowerCase(); const ub=UNI_W[key]||{}; if((ub[course]||0)>=2) bits.push(`Signals prep for ${state.profile.university}`);
+  const ci=creditInfo(state.profile.university, course); if(ci.credits) bits.push(`Credit: ${ci.credits}u (≥${ci.min||'—'})`);
+  if(course==="Statistics") bits.push("Maintains math continuity");
+  if(CATS.writing.includes(course)) bits.push("Maintains writing intensity");
+  if(course.startsWith("Physics C")) bits.push("Calc‑based physics depth");
+  return bits.join("; ") + ` (grade ${gradeNum}).`;
+}
+function scoreWithContext(course, yr, mode, gradeNum){
+  let s = SCORE.find(x=>x.course===course)?.score || 0;
+  s += creditBoost(course, mode);
+  const isLab = CATS.lab.includes(course); const isMath = CATS.math.concat(CATS.physics).includes(course);
+  if(isLab && yr.labs>=2) s -= 3*(yr.labs-1);
+  if(isMath && yr.maths>=2) s -= 2*(yr.maths-1);
+  const stemy = /Engineering|Computer Science|Data|Business Analytics/.test(state.profile.major) || /engineering|cs/.test((state.profile.university||'').toLowerCase());
+  if(gradeNum>=12 && stemy && (course==="Precalculus"||course==="Calculus AB")) s -= 3;
+  if(state.filters.hideNoCredit){ const ci=creditInfo(state.profile.university,course); if(!ci.credits) s -= 100; }
+  return s;
+}
+function makePlan(mode){
+  const caps=capsFor(mode, Number(state.profile.hrs||28));
+  const have=new Set(Object.keys(state.taken));
+  const plan=[]; const lockedList=Array.from(state.locked).filter(k=>!have.has(k));
+  for(let y=0;y<state.profile.years;y++){
+    const gradeNum=Number(state.profile.grade)+y;
+    const yr={title:`Year ${y+1} (Grade ${gradeNum})`, items:[], load:0, labs:0, maths:0};
+    const tryAdd=c=>{
+      if(!c||have.has(c)||state.avoid.has(c)) return false;
+      if(have.has("Calculus BC") && c==="Calculus AB") return false;
+      if((have.has("Physics C Mechanics")||have.has("Physics C E&M")) && c==="Physics 1") return false;
+      const reqs=PREREQS[c]||[]; const ok=!reqs.length || reqs.some(r=>have.has(r)||yr.items.some(i=>i.course===r)); if(!ok) return false;
+      const nextLoad=yr.load+(LOAD[c]||5), nextLabs=yr.labs+(CATS.lab.includes(c)?1:0), nextMath=yr.maths+(CATS.math.concat(CATS.physics).includes(c)?1:0);
+      if(nextLoad>caps.hours || nextLabs>caps.lab || nextMath>caps.math || yr.items.length>=caps.ap) return false;
+      yr.items.push({course:c, why:rationale(c,gradeNum), note:reqs.length?`Needs ${reqs.join(' or ')}`:''}); yr.load=nextLoad; yr.labs=nextLabs; yr.maths=nextMath; have.add(c); return true;
+    };
+    lockedList.forEach(c=> tryAdd(c));
+    const pool=CATALOG.filter(c=> !have.has(c) && !state.avoid.has(c));
+    const scored=pool.map(c=>({c,v:scoreWithContext(c,yr,mode,gradeNum)})).sort((a,b)=> b.v-a.v);
+    for(const {c} of scored){ tryAdd(c); }
+    if(!yr.items.some(i=> CATS.writing.includes(i.course))){
+      const wpool=pool.filter(c=> CATS.writing.includes(c)).map(c=>({c,v:scoreWithContext(c,yr,mode,gradeNum)+1})).sort((a,b)=> b.v-a.v);
+      for(const {c} of wpool){ if(tryAdd(c)) break; }
+    }
+    plan.push(yr);
+  }
+  return plan;
+}
+function riskChecks(plan){
+  const notes=[]; const list = plan.flatMap(y=>y.items.map(i=>i.course)).concat(Object.keys(state.taken));
+  if(list.includes("Calculus AB") && list.includes("Calculus BC")) notes.push("AB + BC often redundant; BC covers most AB content.");
+  if((list.includes("Physics C Mechanics")||list.includes("Physics C E&M")) && list.includes("Physics 1")) notes.push("Physics 1 unnecessary if taking Physics C.");
+  plan.forEach(y=> notes.push(`${y.title}: ~${y.load} hrs/wk, labs ${y.labs}, math‑heavy ${y.maths}`));
+  if(state.locked.size) notes.push("Locked courses were prioritized within caps.");
+  if(state.avoid.size) notes.push("Avoided courses were excluded.");
+  return notes;
+}
+function renderPolicyPanel(){
+  $('#polUni').textContent = state.profile.university || '—';
+  const uni=(state.profile.university||'').toLowerCase().trim();
+  const rows=POLICIES.filter(r=> r.university.toLowerCase()===uni);
+  const box=$('#policyBox'); if(!rows.length){ box.innerHTML='<div class="tiny muted">No policy data for this university.</div>'; return; }
+  const header='<table class="table"><thead><tr><th>AP</th><th>Min</th><th>Credits</th></tr></thead><tbody>';
+  const body=rows.sort((a,b)=> (b.credits||0)-(a.credits||0)).map(r=> `<tr><td>${r.exam}</td><td>${r.min_score??'—'}</td><td>${r.credits??0}</td></tr>`).join('');
+  box.innerHTML=header+body+'</tbody></table>';
+}
+function renderPriority(){ const pri=$('#priority'); pri.innerHTML=''; [...SCORE].sort((a,b)=>b.score-a.score).slice(0,12).forEach(s=>{ const div=document.createElement('div'); div.className='cardlet'; div.innerHTML=`<div class="row"><div>${s.course}</div><span class="badge">score ${s.score}</span></div>`; pri.appendChild(div); }); }
+function renderPlan(mode){
+  const plan=makePlan(mode); const board=$('#board'); board.innerHTML='';
+  plan.forEach(y=>{
+    const col=document.createElement('div'); col.className='col';
+    const itemsHTML=y.items.map(it=>{ const ci=creditInfo(state.profile.university,it.course); const creditLine= ci.credits?`🎓 ${ci.credits}u (≥${ci.min||'—'})` : (state.filters.hideNoCredit?'':'— no credit'); return `<div class="cardlet"><div class="row"><strong>${it.course}</strong><span class="badge">${it.note||''}</span></div><div class="tiny muted">${it.why}</div><div class="tiny">${creditLine}</div></div>`; }).join('');
+    col.innerHTML=`<h3>${y.title}</h3><div class="tiny muted">Load ~${y.load} • Labs ${y.labs} • Math ${y.maths}</div>${itemsHTML}`; board.appendChild(col);
+  });
+  const warns=riskChecks(plan); const wEl=$('#warnings'); if(warns.length){ wEl.classList.remove('hidden'); wEl.innerHTML=warns.map(w=>`<div>⚠️ ${w}</div>`).join(''); } else { wEl.classList.add('hidden'); wEl.innerHTML=''; }
+  const weekly=plan.reduce((a,y)=>Math.max(a,y.load),0); const daily=(weekly/5).toFixed(1); $('#time').textContent=`Heaviest year ~${weekly} hrs/week (~${daily}/day on school days)`;
+  return plan;
+}
+function renderCompare(){
+  const container=$('#compare'); if(container.classList.contains('hidden')) return;
+  const modes=['balanced','rigor','credit','creditfirst']; const rows=modes.map(m=>{ const p=makePlan(m); const heavy=p.reduce((a,y)=>Math.max(a,y.load),0); const labs=Math.max(...p.map(y=>y.labs)); const maths=Math.max(...p.map(y=>y.maths)); const risks=riskChecks(p).length; return `<tr><td>${m}</td><td>${heavy}</td><td>${labs}</td><td>${maths}</td><td>${risks}</td></tr>`; });
+  container.innerHTML=`<h3>Mode comparison</h3><table class="table"><thead><tr><th>Mode</th><th>Heaviest hrs/wk</th><th>Max labs/yr</th><th>Max math/yr</th><th>Risk notes</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function exportJSON(plans){ const data={profile:state.profile,plans,timestamp:new Date().toISOString()}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ap-optimizer-plans.json'; a.click(); }
+function exportCSV(plans){ const rows=[['Mode','Year','Course','Why']]; Object.entries(plans).forEach(([mode,plan])=>{ plan.forEach(y=> y.items.forEach(it=> rows.push([mode,y.title,it.course,it.why]))); }); const csv=rows.map(r=> r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ap-optimizer-plans.csv'; a.click(); }
+function shareLink(){ const payload={profile:state.profile,locked:[...state.locked],avoid:[...state.avoid],taken:state.taken}; const b64=btoa(unescape(encodeURIComponent(JSON.stringify(payload)))); const link=location.origin+location.pathname+'#s='+b64; navigator.clipboard.writeText(link).then(()=> alert('Link copied!')); }
+function tryLoadFromHash(){ if(location.hash.startsWith('#s=')){ try{ const p=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3))))); if(p.profile) state.profile=p.profile; if(p.locked) state.locked=new Set(p.locked); if(p.avoid) state.avoid=new Set(p.avoid); if(p.taken) state.taken=p.taken; }catch(e){} } }
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await loadPolicies();
+  buildChecklist();
+  tryLoadFromHash();
+  // Nav
+  $('#start').addEventListener('click',()=> goto(2));
+  document.querySelectorAll('[data-nav="back"]').forEach(b=> b.addEventListener('click',()=> goto(1)));
+  $('#restart').addEventListener('click',()=> location.reload());
+  $('#btnReset').addEventListener('click',()=> location.reload());
+  $('#btnPDF').addEventListener('click',()=>{ $('#printNote').style.display='block'; window.print(); });
+  $('#btnCSV').addEventListener('click',()=>{ computeScores(); const plans={balanced:makePlan('balanced'),rigor:makePlan('rigor'),credit:makePlan('credit'),creditfirst:makePlan('creditfirst')}; exportCSV(plans); });
+  $('#btnJSON').addEventListener('click',()=>{ computeScores(); const plans={balanced:makePlan('balanced'),rigor:makePlan('rigor'),credit:makePlan('credit'),creditfirst:makePlan('creditfirst')}; exportJSON(plans); });
+  $('#btnShare').addEventListener('click',shareLink);
+  // Inputs
+  $('#grade').addEventListener('change', e=> state.profile.grade=Number(e.target.value));
+  $('#years').addEventListener('change', e=> state.profile.years=Number(e.target.value));
+  $('#hrs').addEventListener('input', e=> state.profile.hrs=Number(e.target.value));
+  $('#univ').addEventListener('input', e=>{ state.profile.university=e.target.value; renderPolicyPanel(); });
+  $('#major').addEventListener('change', e=> state.profile.major=e.target.value);
+  $('#go').addEventListener('click', ()=>{ computeScores(); renderPriority(); renderPlan('balanced'); document.querySelectorAll('.plans .pill').forEach(b=> b.classList.remove('active')); document.querySelector('.plans .pill[data-mode="balanced"]').classList.add('active'); goto(3); });
+  // Modes
+  document.querySelectorAll('.plans .pill').forEach(btn=> btn.addEventListener('click', ()=>{ document.querySelectorAll('.plans .pill').forEach(b=> b.classList.remove('active')); btn.classList.add('active'); const mode=btn.dataset.mode; renderPlan(mode); renderCompare(); }));
+  // Filters
+  $('#fHideNoCredit').addEventListener('change', e=>{ state.filters.hideNoCredit=e.target.checked; const active=document.querySelector('.plans .pill.active')?.dataset.mode||'balanced'; renderPlan(active); renderCompare(); });
+  // Compare
+  $('#btnCompare').addEventListener('click',()=>{ const el=$('#compare'); el.classList.toggle('hidden'); if(!el.classList.contains('hidden')) renderCompare(); });
+});
+</script>
+</body></html>

@@ -1,0 +1,93 @@
+[
+  {
+    "university": "UC Berkeley (Engineering)",
+    "exam": "Calculus BC",
+    "min_score": 5,
+    "credits": 8,
+    "notes": "4=4u, 5=8u"
+  },
+  {
+    "university": "UC Berkeley (Engineering)",
+    "exam": "Physics C Mechanics",
+    "min_score": 5,
+    "credits": 4,
+    "notes": ""
+  },
+  {
+    "university": "UC Berkeley (Engineering)",
+    "exam": "Chemistry",
+    "min_score": 5,
+    "credits": 4,
+    "notes": ""
+  },
+  {
+    "university": "UC Berkeley (Engineering)",
+    "exam": "English Language",
+    "min_score": 4,
+    "credits": 4,
+    "notes": ""
+  },
+  {
+    "university": "NUS (Business Analytics)",
+    "exam": "Statistics",
+    "min_score": 5,
+    "credits": 4,
+    "notes": "Varies by faculty"
+  },
+  {
+    "university": "NUS (Business Analytics)",
+    "exam": "Calculus BC",
+    "min_score": 5,
+    "credits": 4,
+    "notes": ""
+  },
+  {
+    "university": "NUS (Business Analytics)",
+    "exam": "Computer Science A",
+    "min_score": 5,
+    "credits": 4,
+    "notes": ""
+  },
+  {
+    "university": "KAIST (Engineering)",
+    "exam": "Calculus BC",
+    "min_score": 5,
+    "credits": 6,
+    "notes": ""
+  },
+  {
+    "university": "KAIST (Engineering)",
+    "exam": "Physics C Mechanics",
+    "min_score": 5,
+    "credits": 3,
+    "notes": ""
+  },
+  {
+    "university": "Georgia Tech (IE/CS)",
+    "exam": "Calculus BC",
+    "min_score": 5,
+    "credits": 8,
+    "notes": ""
+  },
+  {
+    "university": "Georgia Tech (IE/CS)",
+    "exam": "Statistics",
+    "min_score": 4,
+    "credits": 3,
+    "notes": ""
+  },
+  {
+    "university": "Cornell (ORIE/CS)",
+    "exam": "Calculus BC",
+    "min_score": 5,
+    "credits": 8,
+    "notes": ""
+  },
+  {
+    "university": "Cornell (ORIE/CS)",
+    "exam": "Computer Science A",
+    "min_score": 5,
+    "credits": 4,
+    "notes": ""
+  }
+]
